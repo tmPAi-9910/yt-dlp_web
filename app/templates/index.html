@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>yt-dlp Web Downloader</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Roboto, "Helvetica Neue", Arial; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+      label { display:block; margin-top: 1rem; }
+      input, select { width:100%; padding: .5rem; }
+      button { margin-top: 1rem; padding: .6rem 1rem; }
+      pre { background:#f6f8fa; padding:1rem; border-radius:6px; }
+    </style>
+  </head>
+  <body>
+    <h1>yt-dlp Web Downloader</h1>
+
+    <form id="dlForm">
+      <label>Video URL
+        <input type="url" name="url" id="url" required placeholder="https://www.youtube.com/watch?v=..." />
+      </label>
+
+      <label>Format
+        <select id="format" name="format">
+          <option value="original">Original</option>
+          <option value="mp4">MP4 (merge)</option>
+          <option value="audio">Audio (MP3)</option>
+        </select>
+      </label>
+
+      <label>API Token (optional)
+        <input type="text" id="token" name="token" value="{{ auth_token }}" />
+      </label>
+
+      <button type="submit">ダウンロード開始</button>
+    </form>
+
+    <section id="result" style="margin-top:1rem"></section>
+
+    <script>
+      const form = document.getElementById('dlForm');
+      const result = document.getElementById('result');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        result.innerHTML = '';
+        const url = document.getElementById('url').value;
+        const format = document.getElementById('format').value;
+        const token = document.getElementById('token').value;
+
+        try {
+          const headers = {'Content-Type': 'application/json'};
+          if (token) headers['Authorization'] = 'Bearer ' + token;
+
+          const res = await fetch('/api/download', { method: 'POST', headers, body: JSON.stringify({url, format}) });
+          if (!res.ok) throw new Error(await res.text());
+          const data = await res.json();
+          const jobId = data.job_id;
+          result.innerHTML = `<div>ジョブ作成: <strong>${jobId}</strong></div><div id="status">状態: queued</div>`;
+
+          const statusEl = document.getElementById('status');
+
+          const iv = setInterval(async () => {
+            const st = await fetch(`/status/${jobId}`);
+            if (!st.ok) { statusEl.textContent = '状態取得エラー'; clearInterval(iv); return; }
+            const json = await st.json();
+            statusEl.textContent = '状態: ' + json.status;
+            if (json.status === 'finished') {
+              clearInterval(iv);
+              const files = json.files || [];
+              if (files.length) {
+                const list = files.map(f => {
+                  const name = f.split('/').pop();
+                  return `<li><a href="/files/${jobId}/${encodeURIComponent(name)}">${name}</a></li>`;
+                }).join('');
+                result.innerHTML += `<h3>ダウンロード完了</h3><ul>${list}</ul>`;
+              } else {
+                result.innerHTML += '<div>完了しましたがファイルが見つかりません。</div>';
+              }
+            } else if (json.status === 'error') {
+              clearInterval(iv);
+              result.innerHTML += `<pre>エラー: ${json.error}</pre>`;
+            }
+          }, 3000);
+
+        } catch (err) {
+          result.innerHTML = `<pre>${err}</pre>`;
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,14 @@
+# Sample Render service definition (optional)
+services:
+  - type: web
+    name: ytdlp-web
+    env: docker
+    plan: free
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: AUTH_TOKEN
+        value: changeme
+      - key: MAX_CONCURRENT_DOWNLOADS
+        value: "2"
+      - key: FILE_TTL_MIN
+        value: "60"
