@@ -28,7 +28,7 @@ async def startup_event():
 
 @app.get("/")
 async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "auth_token": AUTH_TOKEN})
+    return templates.TemplateResponse(request, "index.html", {"auth_token": AUTH_TOKEN})
 
 
 @app.post("/download")
