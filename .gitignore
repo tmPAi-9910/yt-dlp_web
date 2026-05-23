@@ -4,6 +4,11 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.egg-info/
+.eggs
+.env
+.env.local
+.env.*
 .Python
 env/
 venv/
@@ -13,11 +18,35 @@ venv/
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Distribution / packaging
-.Python
+# Build artifacts
 build/
-develop-eggs/
 dist/
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+
+# Testing
+.coverage
+coverage/
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
 downloads/
 eggs/
 .eggs/
